@@ -151,7 +151,7 @@ if __name__ == "__main__":
     #curs.execute(sql, ('이연수', 2, '서울'))
     #print(Lst)
     for i in Lst:
-        print(i)
+        print(i +"!!")
         curs.execute(sql, (i['STOCK_CODE'], i['STOCK_NAME'], i['TOTAL'], i['PER'], i['EPS'], i['ROE']
                            , i['PBR'], i['BPS'], i['SALES'], i['BENEFIT'], i['ROE'], i['CURRENT_PRICE']))
         print(i['STOCK_NAME'])
