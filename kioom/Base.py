@@ -7,7 +7,7 @@ from datetime import datetime
 import time
 import pymysql
 
-TR_REQ_TIME_INTERVAL = 0.4
+TR_REQ_TIME_INTERVAL = 0.8
 dic1 = {}
 Lst = list()
 test11 = 0
@@ -126,38 +126,38 @@ if __name__ == "__main__":
     kiwoom = Kiwoom()
     kiwoom.comm_connect()
 
+    #0:장내, 10:코스닥
     kospi = kiwoom.GetCodeListByMarket('0')
-    kosdaq = kiwoom.GetCodeListByMarket('1')
-    list_str_kospi = kospi.split(';');
-    list_str_kosdaq = kosdaq.split(';');
+    #kosdaq = kiwoom.GetCodeListByMarket('1')
+    list_str = kospi.split(';');
+    #list_str_kosdaq = kosdaq.split(';');
     db = pymysql.connect(host="127.0.0.1", user="root", passwd="1111", db="STOCK", charset="utf8")
     curs = db.cursor()
     cur_date = datetime.today().strftime("%Y%m%d")
     #for i in range(len(list_str)):
-    print(len(list_str_kospi))
-    print(len(list_str_kosdaq))
-    for i in range(10):
-
+    #800 기준으로 등호를 바꾸어주어야 함
+    stockCodeSql = """select A.STOCK_CODE, A.RN FROM (SELECT STOCK_CODE,ROW_NUMBER() OVER (ORDER BY STOCK_CODE ASC) rn FROM STOCK_CODE) A WHERE A.RN >= 800"""
+    curs.execute(stockCodeSql)
+    list_str = curs.fetchall();
+    print(len(list_str))
+    print(list_str)
+    for i in range(len(list_str)):
         time.sleep(TR_REQ_TIME_INTERVAL)
-
-        kiwoom.set_input_value("종목코드", list_str_kospi[i])
+        kiwoom.set_input_value("종목코드", list_str[i][0])
         kiwoom.comm_rq_data("opt10001_req", "opt10001", 0, "2000")
-        print(list_str_kospi[i])
+        print(i/len(list_str))
         #이제 데이터를 DB에 넣으면 된다
         #print(dic1)
         #curs.execute("""insert into test(TEST,PLAYER_NAME) VALUES(%s,%s) """)
-
         #rows = curs.fetchall()
-    resetSql = """delete from BASE_DATA WHERE RGS_DTM =%s"""
+
+    resetSql = """delete from BASE_DATA WHERE STOCK_CODE = %s and RGS_DTM =%s"""
     sql = """insert into BASE_DATA(STOCK_CODE,STOCK_NAME,TOTAL,PER,EPS,ROE,PBR,BPS,SALES,BENEFIT,AFTERBENEFIT,CURRENT_PRICE,RGS_DTM)
              values (%s, %s, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
 
-    #curs.execute(sql, ('홍길동', 1, '서울'))
-    #curs.execute(sql, ('이연수', 2, '서울'))
-    #print(Lst)
-    curs.execute(resetSql, cur_date)
     for i in Lst:
         #print(i)
+        curs.execute(resetSql,(i['STOCK_CODE'],cur_date))
         curs.execute(sql, (i['STOCK_CODE'], i['STOCK_NAME'], i['TOTAL'], i['PER'], i['EPS'], i['ROE']
                            , i['PBR'], i['BPS'], i['SALES'], i['BENEFIT'], i['ROE'], i['CURRENT_PRICE'], cur_date))
         print(i['STOCK_NAME'])

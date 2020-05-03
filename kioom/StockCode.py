@@ -7,7 +7,7 @@ from datetime import datetime
 import time
 import pymysql
 
-TR_REQ_TIME_INTERVAL = 0.4
+TR_REQ_TIME_INTERVAL = 1
 dic1 = {}
 Lst = list()
 test11 = 0
@@ -126,41 +126,24 @@ if __name__ == "__main__":
     kiwoom = Kiwoom()
     kiwoom.comm_connect()
 
+    #0:장내, 10:코스닥
     kospi = kiwoom.GetCodeListByMarket('0')
-    kosdaq = kiwoom.GetCodeListByMarket('1')
-    list_str_kospi = kospi.split(';');
-    list_str_kosdaq = kosdaq.split(';');
+    print(kospi)
+    list_str = kospi.split(';');
     db = pymysql.connect(host="127.0.0.1", user="root", passwd="1111", db="STOCK", charset="utf8")
     curs = db.cursor()
+    print(list_str)
+    print(len(list_str))
     cur_date = datetime.today().strftime("%Y%m%d")
-    #for i in range(len(list_str)):
-    print(len(list_str_kospi))
-    print(len(list_str_kosdaq))
-    for i in range(10):
+    sql = """insert into STOCK_CODE(STOCK_CODE,RGS_DTM)
+                    values (%s,%s)"""
+    resetSql = """delete from STOCK_CODE WHERE RGS_DTM =%s"""
+    curs.execute(resetSql,  cur_date)
 
-        time.sleep(TR_REQ_TIME_INTERVAL)
-
-        kiwoom.set_input_value("종목코드", list_str_kospi[i])
-        kiwoom.comm_rq_data("opt10001_req", "opt10001", 0, "2000")
-        print(list_str_kospi[i])
-        #이제 데이터를 DB에 넣으면 된다
-        #print(dic1)
-        #curs.execute("""insert into test(TEST,PLAYER_NAME) VALUES(%s,%s) """)
-
-        #rows = curs.fetchall()
-    resetSql = """delete from BASE_DATA WHERE RGS_DTM =%s"""
-    sql = """insert into BASE_DATA(STOCK_CODE,STOCK_NAME,TOTAL,PER,EPS,ROE,PBR,BPS,SALES,BENEFIT,AFTERBENEFIT,CURRENT_PRICE,RGS_DTM)
-             values (%s, %s, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
-
-    #curs.execute(sql, ('홍길동', 1, '서울'))
-    #curs.execute(sql, ('이연수', 2, '서울'))
-    #print(Lst)
-    curs.execute(resetSql, cur_date)
-    for i in Lst:
-        #print(i)
-        curs.execute(sql, (i['STOCK_CODE'], i['STOCK_NAME'], i['TOTAL'], i['PER'], i['EPS'], i['ROE']
-                           , i['PBR'], i['BPS'], i['SALES'], i['BENEFIT'], i['ROE'], i['CURRENT_PRICE'], cur_date))
-        print(i['STOCK_NAME'])
+    for i in range(len(list_str)):
+        if list_str[i] == '':
+            break
+        curs.execute(sql,(list_str[i],cur_date))
 
     db.commit()
     db.close()
