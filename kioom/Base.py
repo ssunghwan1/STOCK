@@ -125,7 +125,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     kiwoom = Kiwoom()
     kiwoom.comm_connect()
-
+    cur_date = datetime.today().strftime("%Y%m%d")
     #0:장내, 10:코스닥
     kospi = kiwoom.GetCodeListByMarket('0')
     #kosdaq = kiwoom.GetCodeListByMarket('1')
@@ -136,8 +136,8 @@ if __name__ == "__main__":
     cur_date = datetime.today().strftime("%Y%m%d")
     #for i in range(len(list_str)):
     #800 기준으로 등호를 바꾸어주어야 함
-    stockCodeSql = """select A.STOCK_CODE, A.RN FROM (SELECT STOCK_CODE,ROW_NUMBER() OVER (ORDER BY STOCK_CODE ASC) rn FROM STOCK_CODE) A WHERE A.RN >= 800"""
-    curs.execute(stockCodeSql)
+    stockCodeSql = """select A.STOCK_CODE, A.RN FROM (SELECT STOCK_CODE,ROW_NUMBER() OVER (ORDER BY STOCK_CODE ASC) rn FROM STOCK_CODE  WHERE RGS_DTM =%s) A WHERE A.RN > 800 """
+    curs.execute(stockCodeSql,cur_date)
     list_str = curs.fetchall();
     print(len(list_str))
     print(list_str)
